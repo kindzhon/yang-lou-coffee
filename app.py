@@ -423,7 +423,7 @@ st.markdown("""
 <div style="text-align: center; padding: 3rem 1rem; margin-top: 3rem; color: #999; font-size: 0.9rem;">
     <div style="margin-bottom: 1rem;">✿ ✿ ✿</div>
     <p>&copy; 2024 洋语楼咖啡 Yangyu Lou Coffee. All rights reserved.</p>
-    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Designed with ☕ & 🌸 in Shanghai</p>
+    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Designed with ☕Kindzhon & 🌸 in Shenzhen</p>
 </div>
 """, unsafe_allow_html=True)
 
