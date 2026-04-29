@@ -361,8 +361,7 @@ with story_col2:
     # 使用占位图或Unsplash图片
     st.image("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", 
              caption="洋语楼工作室 · 上海法租界", 
-             use_column_width=True,
-             style="border-radius: 16px;")
+             use_column_width=True)
 
 # 购物车侧边栏
 with st.sidebar:
