@@ -1,630 +1,447 @@
 import streamlit as st
+from PIL import Image
+import base64
+from io import BytesIO
 
-# ---------------- 基础配置 ----------------
+# 页面配置
 st.set_page_config(
-    page_title="洋语楼咖啡",
+    page_title="洋语楼咖啡 | Yangyu Lou Coffee",
     page_icon="☕",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# ---------------- 自定义样式 ----------------
-st.markdown(
-    """
-    <style>
-    /* 全局字体与背景 */
-    html, body, [class*="css"]  {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-        background: radial-gradient(circle at top left, #fdf4ea 0, #f7ebe4 35%, #f3e7f0 70%, #f7f5f2 100%);
-        color: #3b2b2b;
-    }
+# 初始化 Session State
+if 'cart' not in st.session_state:
+    st.session_state.cart = []
+if 'total' not in st.session_state:
+    st.session_state.total = 0
 
-    /* 去掉顶部多余空白 */
-    .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 3rem;
+# 自定义 CSS - 现代柔和艺术风格
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500&display=swap');
+    
+    /* 全局样式 */
+    .stApp {
+        background: linear-gradient(135deg, #faf8f5 0%, #f5ebe0 50%, #faf7f2 100%);
+        font-family: 'Noto Sans SC', sans-serif;
     }
-
-    /* 导航栏 */
-    .yy-nav {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        backdrop-filter: blur(16px);
-        background: rgba(253, 244, 234, 0.85);
-        border-radius: 999px;
-        padding: 0.4rem 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border: 1px solid rgba(120, 90, 70, 0.12);
-        box-shadow: 0 14px 40px rgba(0,0,0,0.04);
-        margin-bottom: 1.5rem;
+    
+    /* 标题字体 */
+    h1, h2, h3 {
+        font-family: 'Playfair Display', serif;
+        color: #5c4033;
     }
-
-    .yy-nav-left {
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-    }
-
-    .yy-logo {
-        width: 32px;
-        height: 32px;
-        border-radius: 999px;
-        background: radial-gradient(circle at 30% 20%, #fef6e9 0, #f0d2b0 40%, #c28b5b 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-    }
-
-    .yy-brand-cn {
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        font-size: 0.85rem;
-    }
-
-    .yy-brand-en {
-        font-size: 0.7rem;
-        opacity: 0.7;
-    }
-
-    .yy-nav-links {
-        display: flex;
-        gap: 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    .yy-nav-link {
-        padding: 0.35rem 0.9rem;
-        border-radius: 999px;
-        cursor: pointer;
-        border: 1px solid transparent;
-        transition: all 0.18s ease-out;
-        color: #5a4337;
-        text-decoration: none;
-    }
-
-    .yy-nav-link:hover {
-        background: rgba(255,255,255,0.9);
-        border-color: rgba(120, 90, 70, 0.25);
-        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-    }
-
-    .yy-nav-link-primary {
-        background: linear-gradient(135deg, #c58b5b, #b46b5a);
-        color: #fff !important;
-        box-shadow: 0 10px 24px rgba(180, 107, 90, 0.35);
-    }
-
-    .yy-nav-link-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(180, 107, 90, 0.45);
-    }
-
-    /* 主视觉区 */
-    .yy-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-        gap: 3rem;
-        align-items: center;
-        margin: 1.5rem 0 2.5rem 0;
-    }
-
-    @media (max-width: 900px) {
-        .yy-hero {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    .yy-hero-title-cn {
-        font-size: 2.6rem;
-        line-height: 1.15;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        font-weight: 600;
-        margin-bottom: 0.6rem;
-    }
-
-    .yy-hero-title-en {
-        font-size: 0.9rem;
-        letter-spacing: 0.28em;
-        text-transform: uppercase;
-        opacity: 0.7;
-        margin-bottom: 1.2rem;
-    }
-
-    .yy-hero-sub {
-        font-size: 1rem;
-        line-height: 1.7;
-        max-width: 32rem;
-        opacity: 0.9;
-        margin-bottom: 1.6rem;
-    }
-
-    .yy-hero-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-bottom: 1.8rem;
-    }
-
-    .yy-tag {
-        padding: 0.25rem 0.7rem;
-        border-radius: 999px;
-        border: 1px solid rgba(120, 90, 70, 0.25);
-        font-size: 0.75rem;
-        background: rgba(255,255,255,0.7);
+    
+    /* 导航栏样式 */
+    .nav-container {
+        background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(10px);
+        padding: 1rem 2rem;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
+        margin-bottom: 2rem;
     }
-
-    .yy-hero-cta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.7rem;
-        align-items: center;
-    }
-
-    .yy-hero-note {
-        font-size: 0.75rem;
-        opacity: 0.7;
-    }
-
-    .yy-hero-art {
+    
+    /* 英雄区域 */
+    .hero {
+        background: linear-gradient(rgba(92, 64, 51, 0.3), rgba(139, 69, 19, 0.2)), 
+                    url('https://images.unsplash.com/photo-1447933601403-0c6688de543e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        padding: 8rem 2rem;
+        border-radius: 20px;
+        text-align: center;
+        margin-bottom: 3rem;
         position: relative;
-        min-height: 260px;
+        overflow: hidden;
     }
-
-    .yy-hero-card-main {
+    
+    .hero::before {
+        content: '';
         position: absolute;
-        inset: 0;
-        margin: auto;
-        width: 100%;
-        max-width: 360px;
-        height: 260px;
-        border-radius: 32px;
-        background: radial-gradient(circle at 20% 0, #fffaf4 0, #f3e0d0 40%, #c58b5b 100%);
-        box-shadow: 0 26px 60px rgba(0,0,0,0.25);
-        padding: 1.4rem 1.6rem;
-        color: #2f1f1a;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,182,193,0.1) 0%, transparent 70%);
+        animation: float 20s infinite linear;
     }
-
-    .yy-hero-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    
+    @keyframes float {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
-
-    .yy-hero-badge {
-        padding: 0.25rem 0.7rem;
-        border-radius: 999px;
-        background: rgba(255,255,255,0.85);
-        font-size: 0.7rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
+    
+    .hero-title {
+        font-size: 3.5rem;
+        color: white;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
     }
-
-    .yy-hero-coffee {
-        font-size: 2.4rem;
+    
+    .hero-subtitle {
+        font-size: 1.3rem;
+        color: #fff8f0;
+        font-style: italic;
+        position: relative;
+        z-index: 1;
     }
-
-    .yy-hero-card-body {
-        font-size: 0.85rem;
-        line-height: 1.6;
-        max-width: 14rem;
-    }
-
-    .yy-hero-card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        font-size: 0.75rem;
-    }
-
-    .yy-hero-beans {
-        font-size: 1.6rem;
-    }
-
-    .yy-hero-flower {
-        font-size: 1.6rem;
-    }
-
-    .yy-hero-floating {
-        position: absolute;
-        width: 120px;
-        height: 120px;
-        border-radius: 32px;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.18);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-    }
-
-    .yy-hero-floating.left {
-        left: -10px;
-        bottom: -10px;
-    }
-
-    .yy-hero-floating.right {
-        right: -10px;
-        top: -10px;
-    }
-
-    /* 区块标题 */
-    .yy-section-title {
-        font-size: 1.4rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        margin-bottom: 0.4rem;
-    }
-
-    .yy-section-sub {
-        font-size: 0.9rem;
-        opacity: 0.7;
-        margin-bottom: 1.4rem;
-    }
-
-    /* 商品卡片 */
-    .yy-product-card {
-        border-radius: 24px;
-        padding: 1.2rem 1.3rem;
-        background: rgba(255,255,255,0.9);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.06);
-        border: 1px solid rgba(120, 90, 70, 0.12);
-        display: flex;
-        flex-direction: column;
-        gap: 0.6rem;
+    
+    /* 产品卡片 */
+    .product-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 15px rgba(139, 69, 19, 0.08);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(139, 69, 19, 0.1);
         height: 100%;
     }
-
-    .yy-product-topline {
-        font-size: 0.7rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        opacity: 0.6;
+    
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 30px rgba(139, 69, 19, 0.15);
     }
-
-    .yy-product-name {
-        font-size: 1.05rem;
-        font-weight: 600;
+    
+    .product-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 1rem;
     }
-
-    .yy-product-notes {
-        font-size: 0.8rem;
-        opacity: 0.85;
-    }
-
-    .yy-product-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.35rem;
-        font-size: 0.7rem;
-    }
-
-    .yy-product-tag {
-        padding: 0.15rem 0.55rem;
-        border-radius: 999px;
-        background: rgba(245, 232, 220, 0.9);
-    }
-
-    .yy-product-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 0.4rem;
-    }
-
-    .yy-price {
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .yy-gram {
-        font-size: 0.7rem;
-        opacity: 0.7;
-    }
-
-    .yy-buy-btn {
-        padding: 0.35rem 0.9rem;
-        border-radius: 999px;
-        border: none;
-        background: linear-gradient(135deg, #c58b5b, #b46b5a);
-        color: #fff;
-        font-size: 0.8rem;
-        cursor: pointer;
-        box-shadow: 0 10px 24px rgba(180, 107, 90, 0.35);
-        transition: all 0.18s ease-out;
-    }
-
-    .yy-buy-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(180, 107, 90, 0.45);
-    }
-
-    /* 购买模块 */
-    .yy-checkout-box {
-        border-radius: 24px;
-        padding: 1.4rem 1.5rem;
-        background: rgba(255,255,255,0.95);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.08);
-        border: 1px solid rgba(120, 90, 70, 0.16);
-    }
-
-    .yy-checkout-title {
-        font-size: 1.05rem;
-        font-weight: 600;
-        margin-bottom: 0.4rem;
-    }
-
-    .yy-checkout-sub {
-        font-size: 0.8rem;
-        opacity: 0.75;
-        margin-bottom: 0.8rem;
-    }
-
-    .yy-checkout-summary {
+    
+    .flower-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #ffe4e1 0%, #fff0f5 100%);
+        color: #8b4513;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
         font-size: 0.85rem;
-        margin-top: 0.8rem;
-        padding-top: 0.6rem;
-        border-top: 1px dashed rgba(120, 90, 70, 0.25);
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(139, 69, 19, 0.2);
     }
-
-    .yy-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
+    
+    /* 按钮样式 */
+    .stButton>button {
+        background: linear-gradient(135deg, #8b6914 0%, #a0522d 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 0.5rem 2rem;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    
+    .stButton>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(139, 69, 19, 0.3);
+    }
+    
+    /* 购物车徽章 */
+    .cart-badge {
+        background: #e74c3c;
+        color: white;
+        border-radius: 50%;
         padding: 0.2rem 0.6rem;
-        border-radius: 999px;
-        background: rgba(245, 232, 220, 0.9);
-        font-size: 0.7rem;
-        margin-right: 0.3rem;
-        margin-bottom: 0.3rem;
+        font-size: 0.8rem;
+        position: relative;
+        top: -10px;
+        left: -5px;
     }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+    
+    /* 特色区域 */
+    .feature-section {
+        background: white;
+        border-radius: 20px;
+        padding: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    
+    /* 分隔线 */
+    .floral-divider {
+        text-align: center;
+        margin: 3rem 0;
+        font-size: 1.5rem;
+        color: #d4a373;
+    }
+    
+    /* 柔和文字效果 */
+    .soft-text {
+        color: #6b4423;
+        line-height: 1.8;
+    }
+    
+    /* 隐藏默认菜单 */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* 响应式 */
+    @media (max-width: 768px) {
+        .hero-title { font-size: 2rem; }
+        .hero { padding: 4rem 1rem; }
+    }
+</style>
+""", unsafe_allow_html=True)
 
-# ---------------- 导航栏 ----------------
-nav_html = """
-<div class="yy-nav">
-  <div class="yy-nav-left">
-    <div class="yy-logo">☕</div>
-    <div>
-      <div class="yy-brand-cn">洋语楼咖啡</div>
-      <div class="yy-brand-en">YANG YU LOU COFFEE</div>
-    </div>
-  </div>
-  <div class="yy-nav-links">
-    <a class="yy-nav-link" href="#hero">主视觉</a>
-    <a class="yy-nav-link" href="#products">咖啡豆</a>
-    <a class="yy-nav-link" href="#checkout">下单</a>
-    <a class="yy-nav-link yy-nav-link-primary" href="#checkout">立即品尝</a>
-  </div>
-</div>
-"""
-
-st.markdown(nav_html, unsafe_allow_html=True)
-
-# ---------------- 主视觉区 ----------------
-st.markdown('<div id="hero"></div>', unsafe_allow_html=True)
-
-col_hero_left, col_hero_right = st.columns([1.2, 1])
-
-with col_hero_left:
-    st.markdown(
-        """
-        <div class="yy-hero">
-          <div>
-            <div class="yy-hero-title-en">SLOW ROASTED · FLOWER NOTES</div>
-            <div class="yy-hero-title-cn">洋语楼里的<br/>一杯柔软咖啡</div>
-            <div class="yy-hero-sub">
-              在洋语楼，我们把咖啡豆当作一束花来雕琢——
-              让烘焙的层次、花香的细节、果酸的起伏，在你的味蕾上缓慢展开。
-            </div>
-            <div class="yy-hero-tags">
-              <span class="yy-tag">单一产区 · 手工烘焙</span>
-              <span class="yy-tag">花香与果香并存</span>
-              <span class="yy-tag">适合手冲 / 意式 / 冷萃</span>
-            </div>
-            <div class="yy-hero-cta">
-              <button class="yy-buy-btn" onclick="window.location.hash='#checkout'">选一款今日咖啡</button>
-              <div class="yy-hero-note">每日限量小批次烘焙 · 为今天的心情准备</div>
-            </div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with col_hero_right:
-    st.markdown(
-        """
-        <div class="yy-hero-art">
-          <div class="yy-hero-card-main">
-            <div class="yy-hero-card-header">
-              <div class="yy-hero-badge">
-                <span>今日风味</span>
-                <span>✶</span>
-              </div>
-              <div class="yy-hero-coffee">☕</div>
-            </div>
-            <div class="yy-hero-card-body">
-              花香调耶加雪菲，带白花、柑橘与蜂蜜的层次，
-              适合一个慢下来的下午。
-            </div>
-            <div class="yy-hero-card-footer">
-              <div>
-                <div style="font-size:0.75rem; opacity:0.7;">TASTING NOTES</div>
-                <div style="font-size:0.85rem;">白花 · 柑橘 · 蜂蜜</div>
-              </div>
-              <div>
-                <div class="yy-hero-beans">🫘</div>
-              </div>
-            </div>
-          </div>
-          <div class="yy-hero-floating left">
-            <span class="yy-hero-flower">🌸</span>
-          </div>
-          <div class="yy-hero-floating right">
-            <span>🫘</span>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-# ---------------- 商品数据 ----------------
+# 数据：咖啡产品
 products = [
     {
-        "id": "yy01",
-        "name": "花语耶加 · 日晒",
-        "topline": "ETHIOPIA YIRGACHEFFE · NATURAL",
-        "notes": "白花、熟莓果、蜂蜜甜感，酸质细腻，适合手冲与冷萃。",
-        "tags": ["花香", "莓果", "冷萃友好"],
-        "price": 98,
-        "gram": 200
+        "id": 1,
+        "name": "春日花海 · 拿铁",
+        "price": 42,
+        "description": "埃塞俄比亚耶加雪菲豆，融入洋甘菊与薰衣草花香",
+        "flowers": ["洋甘菊", "薰衣草"],
+        "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "浅中烘"
     },
     {
-        "id": "yy02",
-        "name": "晨光花园 · 混合豆",
-        "topline": "HOUSE BLEND · FLORAL & NUTTY",
-        "notes": "坚果、可可与淡淡花香，平衡顺滑，适合意式与拿铁。",
-        "tags": ["坚果", "可可", "意式"],
-        "price": 88,
-        "gram": 250
+        "id": 2,
+        "name": "玫瑰午后 · 摩卡",
+        "price": 48,
+        "description": "哥伦比亚豆配以大马士革玫瑰萃取，巧克力基调",
+        "flowers": ["玫瑰", "可可花"],
+        "image": "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "中烘"
     },
     {
-        "id": "yy03",
-        "name": "雨后玫瑰 · 水洗",
-        "topline": "COLOMBIA · WASHED",
-        "notes": "玫瑰花、柑橘与红糖尾韵，干净通透，适合手冲。",
-        "tags": ["玫瑰", "柑橘", "干净"],
-        "price": 102,
-        "gram": 200
+        "id": 3,
+        "name": "茉莉晨露 · 手冲",
+        "price": 38,
+        "description": "云南普洱豆，茉莉花窨制工艺，清新茶感",
+        "flowers": ["茉莉", "茶花"],
+        "image": "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "浅烘"
+    },
+    {
+        "id": 4,
+        "name": "樱花纷飞 · 冷萃",
+        "price": 45,
+        "description": "肯尼亚AA级豆，樱花与莓果风味层次，低温慢萃12小时",
+        "flowers": ["樱花", "覆盆子花"],
+        "image": "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "中深烘"
+    },
+    {
+        "id": 5,
+        "name": "桂花庭院 · 澳白",
+        "price": 40,
+        "description": "巴西喜拉多豆，金桂飘香，奶泡绵密如云朵",
+        "flowers": ["桂花", "橙花"],
+        "image": "https://images.unsplash.com/photo-1572442388796-11668a67e53d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "中烘"
+    },
+    {
+        "id": 6,
+        "name": "薰衣草梦境 · 康宝蓝",
+        "price": 46,
+        "description": "危地马拉安提瓜豆，薰衣草精油点缀，奶油甜美",
+        "flowers": ["薰衣草", "香草花"],
+        "image": "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
+        "roast": "中深烘"
     }
 ]
 
-# 初始化购物车
-if "cart" not in st.session_state:
-    st.session_state.cart = {}
-
-def add_to_cart(pid):
-    st.session_state.cart[pid] = st.session_state.cart.get(pid, 0) + 1
-
-# ---------------- 商品展示区 ----------------
-st.markdown('<div id="products"></div>', unsafe_allow_html=True)
-st.markdown('<div class="yy-section-title">COFFEE BEANS</div>', unsafe_allow_html=True)
-st.markdown('<div class="yy-section-sub">为不同的日子，准备三种带花香的咖啡表情。</div>', unsafe_allow_html=True)
-
-cols = st.columns(3)
-for col, p in zip(cols, products):
-    with col:
-        st.markdown(
-            f"""
-            <div class="yy-product-card">
-              <div class="yy-product-topline">{p["topline"]}</div>
-              <div class="yy-product-name">{p["name"]}</div>
-              <div class="yy-product-notes">{p["notes"]}</div>
-              <div class="yy-product-tags">
-                {''.join([f'<span class="yy-product-tag">{t}</span>' for t in p["tags"]])}
-              </div>
-              <div class="yy-product-footer">
-                <div>
-                  <div class="yy-price">¥ {p["price"]}</div>
-                  <div class="yy-gram">{p["gram"]} g</div>
-                </div>
-                <div>
-                  """,
-            unsafe_allow_html=True
-        )
-        # 使用 Streamlit 按钮触发加入购物车
-        if st.button("加入今日清单", key=f"btn_{p['id']}"):
-            add_to_cart(p["id"])
-            st.success(f"已加入：{p['name']}")
-
-        st.markdown("</div></div>", unsafe_allow_html=True)
-
-# ---------------- 购买 / 下单模块 ----------------
-st.markdown('<div id="checkout"></div>', unsafe_allow_html=True)
-st.markdown("---")
-
-checkout_col_left, checkout_col_right = st.columns([1.2, 1])
-
-with checkout_col_left:
-    st.markdown(
-        """
-        <div class="yy-section-title">ORDER TODAY</div>
-        <div class="yy-section-sub">
-          选几款你今天想遇见的风味，我们会为你准备新鲜烘焙的咖啡豆。
+# 导航栏
+cols = st.columns([1, 4, 1])
+with cols[1]:
+    st.markdown("""
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem;">
+        <div style="font-family: 'Playfair Display', serif; font-size: 1.8rem; color: #5c4033; font-weight: 600;">
+            🌸 洋语楼
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+        <div style="display: flex; gap: 2rem;">
+            <a href="#home" style="text-decoration: none; color: #6b4423; font-weight: 500;">首页</a>
+            <a href="#shop" style="text-decoration: none; color: #6b4423; font-weight: 500;">臻选豆单</a>
+            <a href="#about" style="text-decoration: none; color: #6b4423; font-weight: 500;">品牌故事</a>
+            <a href="#cart" style="text-decoration: none; color: #6b4423; font-weight: 500;">购物车({})</a>
+        </div>
+    </div>
+    """.format(len(st.session_state.cart)), unsafe_allow_html=True)
 
-    st.markdown('<div class="yy-checkout-box">', unsafe_allow_html=True)
-    st.markdown('<div class="yy-checkout-title">今日咖啡清单</div>', unsafe_allow_html=True)
-    st.markdown('<div class="yy-checkout-sub">这不是正式支付页面，更像是你与自己的一份咖啡备忘录。</div>', unsafe_allow_html=True)
+# Hero Section
+st.markdown("""
+<div class="hero" id="home">
+    <div class="hero-title">洋语楼咖啡</div>
+    <div class="hero-subtitle">Blossoms & Beans · 花与咖啡豆的私语</div>
+    <br>
+    <div style="color: #fff8f0; font-size: 1rem; margin-top: 2rem;">
+        每一杯都是花朵与咖啡豆的浪漫邂逅
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-    if not st.session_state.cart:
-        st.info("你的清单目前是空的，去上面挑一款咖啡豆吧。")
-    else:
-        total = 0
-        for p in products:
-            pid = p["id"]
-            if pid in st.session_state.cart:
-                qty = st.session_state.cart[pid]
-                line_price = qty * p["price"]
-                total += line_price
-                st.markdown(
-                    f"""
-                    <div class="yy-pill">
-                      <span>{p["name"]}</span>
-                      <span>× {qty}</span>
-                      <span>¥ {line_price}</span>
+# 品牌价值主张
+st.markdown("""
+<div style="text-align: center; padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <h2 style="color: #5c4033; margin-bottom: 1rem;">自然之艺，手工之心</h2>
+    <p class="soft-text" style="font-size: 1.1rem;">
+        洋语楼相信，咖啡不仅是提神的饮品，更是一场感官的艺术之旅。
+        我们从世界各地甄选精品咖啡豆，结合东方花卉工艺，<br>
+        让每一口呼吸都伴随着花香与咖啡香的交织。
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown('<div class="floral-divider">✿ ✿ ✿</div>', unsafe_allow_html=True)
+
+# 产品展示区域
+st.markdown('<h2 style="text-align: center; color: #5c4033; margin-bottom: 3rem;" id="shop">季节限定 · 花语系列</h2>', unsafe_allow_html=True)
+
+# 创建产品网格
+cols_per_row = 3
+for i in range(0, len(products), cols_per_row):
+    cols = st.columns(cols_per_row)
+    for idx, col in enumerate(cols):
+        if i + idx < len(products):
+            product = products[i + idx]
+            with col:
+                st.markdown(f"""
+                <div class="product-card">
+                    <img src="{product['image']}" class="product-image">
+                    <div style="margin-bottom: 0.5rem;">
+                        {''.join([f'<span class="flower-tag">🌸 {f}</span>' for f in product['flowers']])}
                     </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                    <h3 style="margin: 0.5rem 0; color: #5c4033; font-size: 1.3rem;">{product['name']}</h3>
+                    <p style="color: #8b6914; font-size: 0.9rem; margin: 0.5rem 0;">
+                        <span style="background: #f5ebe0; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">{product['roast']}</span>
+                    </p>
+                    <p style="color: #666; font-size: 0.95rem; line-height: 1.5; min-height: 50px;">
+                        {product['description']}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                        <span style="font-family: 'Playfair Display', serif; font-size: 1.4rem; color: #8b4513; font-weight: 600;">
+                            ¥{product['price']}
+                        </span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                if st.button(f"加入购物车", key=f"btn_{product['id']}"):
+                    st.session_state.cart.append(product)
+                    st.session_state.total += product['price']
+                    st.balloons()
+                    st.success(f"已添加 {product['name']} 到购物车！")
 
-        st.markdown(
-            f"""
-            <div class="yy-checkout-summary">
-              <div>预计金额：<strong>¥ {total}</strong></div>
-              <div style="font-size:0.75rem; opacity:0.7; margin-top:0.3rem;">
-                你可以截图或复制这份清单，通过线下门店 / 小程序 / 客服完成正式下单。
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+# 品牌故事
+st.markdown('<div class="floral-divider">✿ ✿ ✿</div>', unsafe_allow_html=True)
+st.markdown('<h2 style="text-align: center; color: #5c4033; margin-bottom: 2rem;" id="about">品牌故事</h2>', unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-with checkout_col_right:
-    st.markdown(
-        """
-        <div class="yy-checkout-box">
-          <div class="yy-checkout-title">冲煮建议 · 小提示</div>
-          <div class="yy-checkout-sub">
-            每一杯咖啡，都是你与当下的一次对话。以下是一些温柔的起点：
-          </div>
-          <ul style="font-size:0.8rem; padding-left:1.1rem; line-height:1.7;">
-            <li>第一次尝试花香豆，可以从手冲开始，水温 90–92℃ 更易感知香气层次。</li>
-            <li>喜欢奶咖，可以选择带坚果与可可风味的混合豆，做成拿铁更顺滑。</li>
-            <li>如果你习惯冷萃，建议选择酸质明亮、甜感清晰的豆子，并延长浸泡时间。</li>
-          </ul>
-          <div style="margin-top:0.8rem; font-size:0.8rem; opacity:0.8;">
-            无论你今天的心情如何，愿这一杯咖啡，替你说一句温柔的话。
-          </div>
+story_col1, story_col2 = st.columns([1, 1])
+with story_col1:
+    st.markdown("""
+    <div class="feature-section">
+        <h3 style="color: #8b6914; margin-bottom: 1rem;">从一颗生豆到满室花香</h3>
+        <p class="soft-text">
+            洋语楼诞生于2021年的春天。创始人曾在云南的花田与埃塞俄比亚的咖啡庄园之间寻找灵感，
+            发现花朵与咖啡豆在发酵过程中有着相似的化学美学——都是时间与自然的魔法。
+        </p>
+        <p class="soft-text">
+            我们独创的"花香冷萃工艺"，将食用级鲜花与精品咖啡豆共同低温发酵，
+            既保留了咖啡的醇厚，又赋予了清雅的芬芳。
+        </p>
+        <br>
+        <div style="background: #faf8f5; padding: 1.5rem; border-radius: 12px; border-left: 4px solid #d4a373;">
+            <p style="font-style: italic; color: #6b4423; margin: 0;">
+                "咖啡是液体的阳光，花朵是固态的香气，<br>
+                而洋语楼，是两者相遇的楼阁。"
+            </p>
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
+    """, unsafe_allow_html=True)
+
+with story_col2:
+    # 使用占位图或Unsplash图片
+    st.image("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", 
+             caption="洋语楼工作室 · 上海法租界", 
+             use_column_width=True,
+             style="border-radius: 16px;")
+
+# 购物车侧边栏
+with st.sidebar:
+    st.markdown("""
+    <div style="padding: 1rem; background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <h3 style="color: #5c4033; margin-bottom: 1rem;">🛒 购物车</h3>
+    """, unsafe_allow_html=True)
+    
+    if not st.session_state.cart:
+        st.markdown('<p style="color: #999; font-style: italic;">购物车还是空的...</p>', unsafe_allow_html=True)
+    else:
+        for item in st.session_state.cart:
+            st.markdown(f"""
+            <div style="display: flex; justify-content: space-between; align-items: center; 
+                        padding: 0.8rem; background: #faf8f5; border-radius: 8px; margin-bottom: 0.5rem;">
+                <div>
+                    <div style="font-weight: 500; color: #5c4033;">{item['name']}</div>
+                    <div style="font-size: 0.8rem; color: #999;">{' '.join(item['flowers'])}</div>
+                </div>
+                <div style="color: #8b4513; font-weight: 600;">¥{item['price']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown(f"""
+        <div style="border-top: 2px solid #f0e6dc; margin-top: 1rem; padding-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 600; color: #5c4033;">
+                <span>总计</span>
+                <span>¥{st.session_state.total}</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("🌸 结算购买", key="checkout"):
+            st.success("感谢您的订购！我们将尽快为您配送这份花香与咖啡的美好。")
+            st.session_state.cart = []
+            st.session_state.total = 0
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # 联系了局信息
+    st.markdown("""
+    <div style="margin-top: 2rem; padding: 1.5rem; background: #f5ebe0; border-radius: 16px; text-align: center;">
+        <h4 style="color: #5c4033; margin-bottom: 0.5rem;">联系我们</h4>
+        <p style="color: #6b4423; font-size: 0.9rem; margin: 0.3rem 0;">
+            📍 上海市徐汇区安福路198号<br>
+            📧 hello@yangyulou.coffee<br>
+            📞 021-6433-xxxx
+        </p>
+        <div style="margin-top: 1rem; font-size: 1.2rem;">
+            <span style="margin: 0 0.3rem;">📷</span>
+            <span style="margin: 0 0.3rem;">🍠</span>
+            <span style="margin: 0 0.3rem;">🎵</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+# 页脚
+st.markdown("""
+<div style="text-align: center; padding: 3rem 1rem; margin-top: 3rem; color: #999; font-size: 0.9rem;">
+    <div style="margin-bottom: 1rem;">✿ ✿ ✿</div>
+    <p>&copy; 2024 洋语楼咖啡 Yangyu Lou Coffee. All rights reserved.</p>
+    <p style="font-size: 0.8rem; margin-top: 0.5rem;">Designed with ☕ & 🌸 in Shanghai</p>
+</div>
+""", unsafe_allow_html=True)
+
+# 浮动购物车按钮（移动端友好）
+if len(st.session_state.cart) > 0:
+    st.markdown(f"""
+    <div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+        <a href="#cart" style="text-decoration: none;">
+            <div style="background: linear-gradient(135deg, #8b6914, #a0522d); 
+                        color: white; padding: 1rem 1.5rem; border-radius: 50px; 
+                        box-shadow: 0 4px 15px rgba(139,69,19,0.3); display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">🛒</span>
+                <span style="font-weight: 600;">{len(st.session_state.cart)} 件商品</span>
+                <span style="background: rgba(255,255,255,0.2); padding: 0.2rem 0.6rem; border-radius: 20px;">
+                    ¥{st.session_state.total}
+                </span>
+            </div>
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
