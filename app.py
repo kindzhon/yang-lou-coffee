@@ -198,7 +198,7 @@ products = [
         "name": "春日花海 · 拿铁",
         "price": 42,
         "description": "帕卡拉玛咖啡豆，融入橙蜜、桔子与柠檬草香",
-        "flowers": ["洋甘菊", "薰衣草"],
+        "flowers": ["桔子", "柠檬䓍"],
         "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
         "roast": "浅中烘"
     },
@@ -406,9 +406,9 @@ with st.sidebar:
     <div style="margin-top: 2rem; padding: 1.5rem; background: #f5ebe0; border-radius: 16px; text-align: center;">
         <h4 style="color: #5c4033; margin-bottom: 0.5rem;">联系我们</h4>
         <p style="color: #6b4423; font-size: 0.9rem; margin: 0.3rem 0;">
-            📍 上海市徐汇区安福路198号<br>
+            📍 东莞市绿茵温莎堡<br>
             📧 hello@yangyulou.coffee<br>
-            📞 021-6433-xxxx
+            📞 0755-6433-xxxx
         </p>
         <div style="margin-top: 1rem; font-size: 1.2rem;">
             <span style="margin: 0 0.3rem;">📷</span>
