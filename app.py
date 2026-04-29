@@ -197,7 +197,7 @@ products = [
         "id": 1,
         "name": "春日花海 · 拿铁",
         "price": 42,
-        "description": "埃塞俄比亚耶加雪菲豆，融入洋甘菊与薰衣草花香",
+        "description": "帕卡拉玛咖啡豆，融入橙蜜、桔子与柠檬草香",
         "flowers": ["洋甘菊", "薰衣草"],
         "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
         "roast": "浅中烘"
@@ -340,7 +340,7 @@ with story_col1:
     <div class="feature-section">
         <h3 style="color: #8b6914; margin-bottom: 1rem;">从一颗生豆到满室花香</h3>
         <p class="soft-text">
-            洋语楼诞生于2021年的春天。创始人曾在云南的花田与埃塞俄比亚的咖啡庄园之间寻找灵感，
+            洋语楼诞生于2012年的春天。创始人曾在云南的花田与萨尔瓦多的圣伊莲娜蕾德拉咖啡庄园之间寻找灵感，
             发现花朵与咖啡豆在发酵过程中有着相似的化学美学——都是时间与自然的魔法。
         </p>
         <p class="soft-text">
@@ -360,7 +360,7 @@ with story_col1:
 with story_col2:
     # 使用占位图或Unsplash图片
     st.image("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80", 
-             caption="洋语楼工作室 · 上海法租界", 
+             caption="洋语楼咖啡工作室 · 深圳华侨城OCT", 
              use_column_width=True)
 
 # 购物车侧边栏
